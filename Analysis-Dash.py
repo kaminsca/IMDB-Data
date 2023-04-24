@@ -11,6 +11,7 @@ from pyspark.sql import SparkSession
 spark = SparkSession.builder \
     .master("local[*]") \
     .appName("Learning_Spark") \
+    .config("spark.ui.port", "4041") \
     .getOrCreate()
 
 BUCKET_NAME = 'imdb-kaminsca'
@@ -73,19 +74,22 @@ bestActors = bestActors.filter(bestActors.numMovies > 5).limit(20)
 app = Dash(__name__)
 
 df = bestActors.toPandas()
+# convert the DataFrame to a list of dictionaries
+data = df.to_dict('records')
 print(df)
-fig = px.scatter(df, x="numMovies", y="avg(averageRating)", hover_name="primaryName")
+fig = px.scatter(df, x='numMovies', y='avg(averageRating)', title='My Graph', hover_name="primaryName")
+fig.show()
 
 print("Creating layout")
 app.layout = html.Div([
     html.Div(children='Actors'),
-    dash_table.DataTable(data=bestActors, page_size=10),
+    #dash_table.DataTable(data=df, page_size=10),
     dcc.Graph(
-        id='num-vs-rating',
-        figure=fig
+        id='my-graph',
+        figure= fig
     )
 ])
 
 if __name__ == '__main__':
     print("Starting app server")
-    app.run_server(debug=True)
+    app.run_server()
